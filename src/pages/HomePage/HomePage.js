@@ -1,6 +1,9 @@
 import styled from "styled-components"
+//import axios from "axios"
+//import { useEffect, useState } from "react"
 
 export default function HomePage() {
+    
     return (
         <PageContainer>
             Selecione o filme
