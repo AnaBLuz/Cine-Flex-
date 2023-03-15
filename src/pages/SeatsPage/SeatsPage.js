@@ -2,12 +2,14 @@ import styled from "styled-components"
 import {useParams} from "react-router-dom"
 import { useEffect,useState } from "react"
 import axios from "axios"
+import { useNavigate } from "react-router-dom"
 
-
-export default function SeatsPage() {
+export default function SeatsPage({setInfoComprador}) {
     const { idSessao } = useParams()
     const [assentos,setAssentos] = useState(undefined)
     const [assentosSelecionados, setAssentosSelecionados] = useState([]);
+    const [form,setForm] = useState({name:"", cpf:""});
+    const navigate = useNavigate();
 
     useEffect(() => {
         const promisse = axios.get(`https://mock-api.driven.com.br/api/v8/cineflex/showtimes/${idSessao}/seats`);
@@ -24,7 +26,7 @@ export default function SeatsPage() {
 
     function assentoClicado(assento){
         if(!assento.isAvailable){
-            alert("Assento indisponível")
+            alert("Esse assento não está disponível")
         }
         else
         { const selecionado = assentosSelecionados.some((s) => s.id === assento.id)
@@ -33,6 +35,34 @@ export default function SeatsPage() {
                else{ setAssentosSelecionados([...assentosSelecionados,assento])} 
             }
     }
+
+  function comprarTicket(e){
+    e.preventDefault()
+    const ids = assentosSelecionados.map((s) => s.id)
+        const body = { ...form, ids }
+
+        axios.post(`https://mock-api.driven.com.br/api/v8/cineflex/seats/book-many`, body)
+            .then(res => {
+                const info = {
+                    movie: assentos.movie.title,
+                    date: assentos.day.date,
+                    hour: assentos.name,
+                    buyer: form.name,
+                    cpf: form.cpf,
+                    seats: assentosSelecionados.map((s) => s.name)
+                }
+
+                setInfoComprador(info);
+                navigate("/sucesso")
+            })
+            .catch(err => alert(err.response.data.message))
+    
+  }
+ 
+function handleForm (e){
+    setForm({...form,[e.target.name]: e.target.value})
+
+}
  
 
     return (
@@ -64,14 +94,30 @@ export default function SeatsPage() {
                 </CaptionItem>
             </CaptionContainer>
 
-            <FormContainer>
-                Nome do Comprador:
-                <input placeholder="Digite seu nome..." />
+            <FormContainer onSubmit={comprarTicket}>
+               <label htmlFor="name">Nome do Comprador:</label> 
+                <input 
+                id="name" 
+                placeholder="Digite seu nome..." 
+                name = "name"
+                value = {form.name}
+                onChange={handleForm}
+                required
+                data-test="client-name"
+                />
 
-                CPF do Comprador:
-                <input placeholder="Digite seu CPF..." />
+                <label htmlFor="cpf">CPF do Comprador:</label>
+                <input 
+                id="cpf" 
+                placeholder="Digite seu CPF..." 
+                name = "cpf" 
+                value = {form.cpf}
+                onChange={handleForm}
+                required
+                data-test="client-cpf"
+                />
 
-                <button>Reservar Assento(s)</button>
+                <button type="submit" >Reservar Assento(s)</button>
             </FormContainer>
 
             <FooterContainer>
@@ -109,7 +155,7 @@ const SeatsContainer = styled.div`
     justify-content: center;
     margin-top: 20px;
 `
-const FormContainer = styled.div`
+const FormContainer = styled.form`
     width: calc(100vw - 40px); 
     display: flex;
     flex-direction: column;

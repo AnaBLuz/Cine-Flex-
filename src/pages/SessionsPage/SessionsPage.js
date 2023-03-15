@@ -35,8 +35,6 @@ export default function SessionsPage() {
                     <ButtonsContainer> 
                      <Link to={`/assentos/${t.id}`} 
                      key={t.id} 
-                     posterURL = {sessao.posterURL}
-                     title = {sessao.title}
                      data-test = "showtime">   
                      <button>{t.name}</button> 
                      </Link>
